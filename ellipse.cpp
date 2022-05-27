@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -27,7 +29,7 @@ using namespace std::chrono ;
 
 bool destroy=false;
 bool go = false;
-CvRect myBox;
+cv::Rect myBox;
 bool drawing_box = false;
 
 FILE *fpout;
@@ -192,7 +194,7 @@ vector<RotatedRect> getEllipsePCA( cv::Mat& binaryImg, cv::Mat drawing) {
   
   //PCA
   const int maxComponents = 2;
-  PCA pca(data, Mat() /*mean*/, CV_PCA_DATA_AS_COL, maxComponents);
+  PCA pca(data, Mat() /*mean*/, PCA::DATA_AS_COL, maxComponents);
 
   //result is contained in pca.eigenvectors (as row vectors)
  
@@ -213,7 +215,7 @@ vector<RotatedRect> getEllipsePCA( cv::Mat& binaryImg, cv::Mat drawing) {
   vector< vector<Point> > contours;
   vector<vector<Point> > toErase;
   
-  findContours(binaryImg, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+  findContours(binaryImg, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
  
    for (size_t i =0; i < contours.size(); i++)
     {
@@ -325,11 +327,11 @@ string type2str(int type)
 
 
 //drawn region on interest
-void draw_box(cv::Mat img, CvRect rect)
+void draw_box(cv::Mat img, cv::Rect rect)
 {
 
-	rectangle(img, cvPoint(myBox.x, myBox.y), cvPoint(myBox.x+myBox.width,myBox.y+myBox.height),
-			cvScalar(0,0,255) ,0.5);
+	rectangle(img, cv::Point(myBox.x, myBox.y), cv::Point(myBox.x+myBox.width,myBox.y+myBox.height),
+		  cv::Scalar(0,0,255) ,0.5);
 }
 
 
@@ -484,7 +486,7 @@ cv::Mat process (cv::Mat frame, cv::Mat bg)
 	  cv::threshold( gray, thresh, threshold_value, 255, 0 );
 
 	  vector<vector<Point> > contours;
-          findContours(thresh, contours,  CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);         
+          findContours(thresh, contours,  RETR_EXTERNAL, CHAIN_APPROX_NONE);         
 
 	  vector<Point> Max = contours[0];
           double MaxArea = contourArea(contours[i]);
@@ -591,7 +593,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 void mouse_pt_callback( int event, int x, int y, int flags, void* userdata )
 {
 
-	if(event == CV_EVENT_LBUTTONDOWN)
+	if(event == EVENT_LBUTTONDOWN)
 	{
 		cv::Point* ptPtr = (cv::Point*)userdata;
 		ptPtr->x = x;
@@ -618,7 +620,7 @@ void mouse_roi_callback( int event, int x, int y, int flags, void* userdata )
 
 	switch( event )
 	{
-	case CV_EVENT_MOUSEMOVE:
+	case EVENT_MOUSEMOVE:
 	{
 		if( drawing_box )
 		{
@@ -628,14 +630,14 @@ void mouse_roi_callback( int event, int x, int y, int flags, void* userdata )
 	}
 	break;
 
-	case CV_EVENT_LBUTTONDOWN:
+	case EVENT_LBUTTONDOWN:
 	{
 		drawing_box = true;
-		myBox = cvRect( x, y, 0, 0 );
+		myBox = cv::Rect( x, y, 0, 0 );
 	}
 	break;
 
-	case CV_EVENT_LBUTTONUP:
+	case EVENT_LBUTTONUP:
 	{
 		drawing_box = false;
 		if( myBox.width < 0 )
@@ -652,7 +654,7 @@ void mouse_roi_callback( int event, int x, int y, int flags, void* userdata )
 	}
 	break;
 
-	case CV_EVENT_RBUTTONUP:
+	case EVENT_RBUTTONUP:
 	{
 		go = true;
 		destroy=true;
@@ -669,7 +671,7 @@ void mouse_roi_callback( int event, int x, int y, int flags, void* userdata )
 int main(int argc, char* argv[])
 {
         //change directory as required
-	fpout = fopen("/home/nathanmoses/workspace/Presentation/video/out/out.dat","w");
+	fpout = fopen("/tmp/out.dat","w");
 
 	fprintf(fpout,"frameNumber,ellipse,a,b,e,area\n");
 
@@ -696,7 +698,7 @@ int main(int argc, char* argv[])
 
 	cv::Mat myFrame;
 
-	myBox = cvRect(0,0,1,1);
+	myBox = cv::Rect(0,0,1,1);
 
 	int noFrames = 0;
 
@@ -708,15 +710,16 @@ int main(int argc, char* argv[])
 
 
 
-	int width = static_cast<int>(cap.get(CV_CAP_PROP_FRAME_WIDTH));
-	int height = static_cast<int>(cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+	int width = static_cast<int>(cap.get(CAP_PROP_FRAME_WIDTH));
+	int height = static_cast<int>(cap.get(CAP_PROP_FRAME_HEIGHT));
 
 
 	cout << "width = " << width <<", height = " << height <<endl;
 
-	double FPS = cap.get(CV_CAP_PROP_FPS);
-
-	cv::VideoWriter out("/home/nathanmoses/workspace/Presentation/video/out/output.avi", CV_FOURCC('M','J', 'P', 'G'), FPS, cv::Size(width, height));
+	double FPS = cap.get(CAP_PROP_FPS);
+	
+	int codec = VideoWriter::fourcc('M', 'J', 'P', 'G'); 
+	cv::VideoWriter out("/tmp/output.avi", codec, FPS, cv::Size(width, height));
 
 
 	if(!out.isOpened())
@@ -728,7 +731,7 @@ int main(int argc, char* argv[])
 
 	firstFrame = frame.clone();
 
-	cvNamedWindow(name,CV_WINDOW_AUTOSIZE | CV_GUI_NORMAL);
+	cv::namedWindow(name, WINDOW_AUTOSIZE);
 	cv::moveWindow 	( name, 100, 100);
 
 
@@ -753,7 +756,7 @@ namedWindow("canny",1);
 
 		cv::imshow(name, aFrame);
 
-		char key = cvWaitKey(10);
+		char key = cv::waitKey(10);
 		if (key == 27 || go)
 		{
 			go = false;
@@ -795,7 +798,7 @@ namedWindow("canny",1);
 
 	    char filename[PATH_MAX];
 
-	    char* dir = "/home/nathanmoses/workspace/Presentation/video/out";
+	    char dir[] = "/tmp";
 
 		{
                      sprintf(filename,"%simage%05d.png",dir,noFrames);
@@ -807,7 +810,7 @@ namedWindow("canny",1);
 		noFrames++;
 
 
-		char key = cvWaitKey(1);
+		char key = cv::waitKey(1);
 		if (key == 27) // ESC
 			break;
 
