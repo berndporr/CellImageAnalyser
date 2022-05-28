@@ -1,8 +1,7 @@
 ## Dependicies
 
-1. Suitable Linux distribution e.g. Ubuntu
-2. OpenCV
-3. Python
+1. Ubuntu 20.x "focal" LTS
+2. OpenCV: `sudo apt-get install libopencv-dev`
 
 ## Usage
 
