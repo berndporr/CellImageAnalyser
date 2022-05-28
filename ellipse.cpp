@@ -798,7 +798,7 @@ namedWindow("canny",1);
 
 	    char filename[PATH_MAX];
 
-	    char dir[] = "/tmp";
+	    char dir[] = "/tmp/";
 
 		{
                      sprintf(filename,"%simage%05d.png",dir,noFrames);
